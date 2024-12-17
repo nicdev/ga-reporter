@@ -1,5 +1,5 @@
 {
-    "name": "nicdev/google-analytics-client",
+    "name": "nicdev/reporter",
     "description": "A PHP client for the Google Analytics API",
     "type": "library",
     "require": {

@@ -11,7 +11,7 @@ use Google\Service\AnalyticsData\FilterExpression;
 use Google\Service\AnalyticsData\RunReportRequest;
 use Google\Service\AnalyticsData\StringFilter;
 
-class Report
+class Reporter
 {
     private Client $client;
     

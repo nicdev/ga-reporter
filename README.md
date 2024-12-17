@@ -1,6 +1,6 @@
 # Google Analytics PHP Client
 
-A modern PHP client for the Google Analytics API that supports both Universal Analytics (UA) and Google Analytics 4 (GA4).
+A modern PHP client for the Google Analytics API 
 
 ## Installation
 
@@ -23,22 +23,22 @@ $client = new \Nicdev\GoogleAnalytics\Client([
     'credentials_path' => '/path/to/credentials.json'
 ]);
 
-// Create report instance
-$report = new \Nicdev\GoogleAnalytics\Report($client);
+// Create Reporter instance
+$reporter = new \Nicdev\GoogleAnalytics\Reporter($client);
 
 // Get page views for last 30 days
 $startDate = new DateTime('30 days ago');
 $endDate = new DateTime();
-$pageViews = $report->getPageViews('VIEW_ID', $startDate, $endDate);
+$pageViews = $reporter->getPageViews('VIEW_ID', $startDate, $endDate);
 
 // Get real-time users
-$activeUsers = $report->getRealTimeUsers('VIEW_ID');
+$activeUsers = $reporter->getRealTimeUsers('VIEW_ID');
 ```
 
 ## Features
 
 - Universal Analytics (UA) and GA4 support
-- Real-time reporting
+- Real-time Reportering
 - Audience metrics
 - Event tracking
 - Custom dimensions and metrics
