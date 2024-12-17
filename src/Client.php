@@ -1,5 +1,4 @@
 <?php
-
 namespace Nicdev\GoogleAnalytics;
 
 use Google\Client as GoogleClient;
@@ -11,20 +10,30 @@ class Client
     private GoogleClient $client;
     private ?Analytics $analyticsService = null;
     private ?AnalyticsData $analyticsDataService = null;
+    private Config $config;
 
-    public function __construct(array $config = [])
+    public function __construct(array|Config $config)
+    {
+        $this->config = is_array($config) ? new Config($config) : $config;
+        $this->initializeClient();
+    }
+
+    private function initializeClient(): void
     {
         $this->client = new GoogleClient();
-        $this->client->setScopes([
-            'https://www.googleapis.com/auth/analytics.readonly'
-        ]);
         
-        if (isset($config['credentials_path'])) {
-            $this->client->setAuthConfig($config['credentials_path']);
+        if ($this->config->getApplicationName()) {
+            $this->client->setApplicationName($this->config->getApplicationName());
         }
         
-        if (isset($config['access_token'])) {
-            $this->client->setAccessToken($config['access_token']);
+        $this->client->setScopes($this->config->getScopes());
+        
+        if ($this->config->getCredentialsPath()) {
+            $this->client->setAuthConfig($this->config->getCredentialsPath());
+        }
+        
+        if ($this->config->getAccessToken()) {
+            $this->client->setAccessToken($this->config->getAccessToken());
         }
     }
 
