@@ -22,14 +22,17 @@ class Reporter
 
     public function getGA4Data(
         string $propertyId,
-        DateTime $startDate,
-        DateTime $endDate,
-        array $metrics = ['activeUsers'],
-        array $dimensions = ['date'],
-        ?array $filterConfig = null
+        ?array $metrics = ['activeUsers'],
+        ?array $dimensions = ['date'],
+        ?array $filterConfig = null,
+        ?DateTime $startDate = null,
+        ?DateTime $endDate = null
     ) {
         $analyticsData = $this->client->getAnalyticsDataService();
         
+        $startDate = $startDate ?: new DateTime('-30 days');
+        $endDate = $endDate ?: new DateTime('today');
+
         $request = new RunReportRequest();
         
         $request->setDateRanges([
