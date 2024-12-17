@@ -1,4 +1,3 @@
-// README.md
 # Google Analytics PHP Client
 
 A modern PHP client for the Google Analytics API that supports both Universal Analytics (UA) and Google Analytics 4 (GA4).
