@@ -8,16 +8,41 @@ use Google\Client as GoogleClient;
 use Google\Service\AnalyticsData;
 use Google\Service\AnalyticsData\Filter;
 use Google\Service\AnalyticsData\FilterExpression;
+use Google\Service\AnalyticsData\FilterExpressionList;
 use Google\Service\AnalyticsData\RunReportRequest;
 use Google\Service\AnalyticsData\StringFilter;
 
 class Reporter
 {
     private Client $client;
-    
+
     public function __construct(Client $client)
     {
         $this->client = $client;
+    }
+
+    public function validatePropertyId(string $propertyId): bool
+    {
+        $analyticsData = $this->client->getAnalyticsDataService();
+
+        try {
+            $request = new RunReportRequest();
+            $request->setDateRanges([
+                [
+                    'startDate' => 'yesterday',
+                    'endDate' => 'yesterday'
+                ]
+            ]);
+            $request->setMetrics([['name' => 'activeUsers']]);
+
+            $analyticsData->properties->runReport(
+                'properties/' . $propertyId,
+                $request
+            );
+            return true;
+        } catch (Exception $e) {
+            return false;
+        }
     }
 
     public function getGA4Data(
@@ -29,40 +54,43 @@ class Reporter
         ?DateTime $endDate = null
     ) {
         $analyticsData = $this->client->getAnalyticsDataService();
-        
+
         $startDate = $startDate ?: new DateTime('-30 days');
         $endDate = $endDate ?: new DateTime('today');
 
         $request = new RunReportRequest();
-        
+
         $request->setDateRanges([
             [
                 'startDate' => $startDate->format('Y-m-d'),
                 'endDate' => $endDate->format('Y-m-d'),
             ]
         ]);
-        
-        $request->setMetrics(array_map(function($metric) {
+
+        $request->setMetrics(array_map(function ($metric) {
             return ['name' => $metric];
         }, $metrics));
-        
-        $request->setDimensions(array_map(function($dimension) {
+
+        $request->setDimensions(array_map(function ($dimension) {
             return ['name' => $dimension];
         }, $dimensions));
 
         // Add filter if provided
         if ($filterConfig) {
             $filter = $this->buildFilter($filterConfig);
+            
             if ($filter) {
                 $request->setDimensionFilter($filter);
             }
         }
 
         try {
-            return $analyticsData->properties->runReport(
+            $report = $analyticsData->properties->runReport(
                 'properties/' . $propertyId,
                 $request
             );
+
+            return $report;
         } catch (Exception $e) {
             throw new Exception('GA4 API Error: ' . $e->getMessage());
         }
@@ -70,6 +98,33 @@ class Reporter
 
     private function buildFilter(array $filterConfig): ?FilterExpression
     {
+        if (isset($filterConfig['filterType']) && $filterConfig['filterType'] === 'andGroup') {
+            $filterExpression = new FilterExpression();
+            $andGroup = new FilterExpressionList();
+
+            $expressions = array_map(function ($expr) {
+                $stringFilter = new StringFilter();
+                $stringFilter->setValue($expr['stringFilter']['value']);
+                $stringFilter->setMatchType($expr['stringFilter']['matchType']);
+                $stringFilter->setCaseSensitive(
+                    $expr['stringFilter']['caseSensitive'] ?? false
+                );
+
+                $filter = new Filter();
+                $filter->setFieldName($expr['fieldName']);
+                $filter->setStringFilter($stringFilter);
+
+                $expression = new FilterExpression();
+                $expression->setFilter($filter);
+                return $expression;
+            }, $filterConfig['expressions']);
+
+            $andGroup->setExpressions($expressions);
+            $filterExpression->setAndGroup($andGroup);
+
+            return $filterExpression;
+        }
+
         if (!isset($filterConfig['fieldName']) || !isset($filterConfig['stringFilter'])) {
             return null;
         }
@@ -81,6 +136,10 @@ class Reporter
         if (isset($filterConfig['stringFilter']['matchType'])) {
             $stringFilter->setMatchType($filterConfig['stringFilter']['matchType']);
         }
+        // Add explicit case sensitivity setting here too
+        $stringFilter->setCaseSensitive(
+            $filterConfig['stringFilter']['caseSensitive'] ?? false
+        );
 
         $filter = new Filter();
         $filter->setFieldName($filterConfig['fieldName']);
@@ -96,26 +155,26 @@ class Reporter
     {
         $result = [];
         $rows = $response->getRows();
-        
+
         if (!$rows) {
             return $result;
         }
 
         foreach ($rows as $row) {
             $rowData = [];
-            
+
             // Get dimension values
             $dimensionValues = $row->getDimensionValues();
             foreach ($response->getDimensionHeaders() as $i => $header) {
                 $rowData[$header->getName()] = $dimensionValues[$i]->getValue();
             }
-            
+
             // Get metric values
             $metricValues = $row->getMetricValues();
             foreach ($response->getMetricHeaders() as $i => $header) {
                 $rowData[$header->getName()] = $metricValues[$i]->getValue();
             }
-            
+
             $result[] = $rowData;
         }
 
