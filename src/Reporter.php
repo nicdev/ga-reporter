@@ -4,14 +4,20 @@ namespace Nicdev\GoogleAnalytics;
 
 use DateTime;
 use Exception;
-use Google\Client as GoogleClient;
-use Google\Service\AnalyticsData;
 use Google\Service\AnalyticsData\Filter;
 use Google\Service\AnalyticsData\FilterExpression;
 use Google\Service\AnalyticsData\FilterExpressionList;
 use Google\Service\AnalyticsData\RunReportRequest;
 use Google\Service\AnalyticsData\StringFilter;
 
+/**
+ * Reporter class handles Google Analytics 4 data retrieval and reporting operations
+ * @category Analytics
+ * @package Nicdev\GoogleAnalytics
+ * @author Nicdev
+ * @license MIT
+ * @link https://github.com/nicdev/google-analytics
+ */
 class Reporter
 {
     private Client $client;
@@ -21,24 +27,36 @@ class Reporter
         $this->client = $client;
     }
 
+    private function formatPropertyId(string $propertyId): string
+    {
+        // If the ID already starts with 'properties/', return it as is
+        if (str_starts_with($propertyId, 'properties/')) {
+            return $propertyId;
+        }
+
+        // Otherwise, prepend 'properties/'
+        return 'properties/'.$propertyId;
+    }
+
     public function validatePropertyId(string $propertyId): bool
     {
         $analyticsData = $this->client->getAnalyticsDataService();
 
         try {
-            $request = new RunReportRequest();
+            $request = new RunReportRequest;
             $request->setDateRanges([
                 [
                     'startDate' => 'yesterday',
-                    'endDate' => 'yesterday'
-                ]
+                    'endDate' => 'yesterday',
+                ],
             ]);
             $request->setMetrics([['name' => 'activeUsers']]);
 
             $analyticsData->properties->runReport(
-                'properties/' . $propertyId,
+                $this->formatPropertyId($propertyId),
                 $request
             );
+
             return true;
         } catch (Exception $e) {
             return false;
@@ -58,13 +76,13 @@ class Reporter
         $startDate = $startDate ?: new DateTime('-30 days');
         $endDate = $endDate ?: new DateTime('today');
 
-        $request = new RunReportRequest();
+        $request = new RunReportRequest;
 
         $request->setDateRanges([
             [
                 'startDate' => $startDate->format('Y-m-d'),
                 'endDate' => $endDate->format('Y-m-d'),
-            ]
+            ],
         ]);
 
         $request->setMetrics(array_map(function ($metric) {
@@ -78,7 +96,7 @@ class Reporter
         // Add filter if provided
         if ($filterConfig) {
             $filter = $this->buildFilter($filterConfig);
-            
+
             if ($filter) {
                 $request->setDimensionFilter($filter);
             }
@@ -86,36 +104,37 @@ class Reporter
 
         try {
             $report = $analyticsData->properties->runReport(
-                'properties/' . $propertyId,
+                $this->formatPropertyId($propertyId),
                 $request
             );
 
             return $report;
         } catch (Exception $e) {
-            throw new Exception('GA4 API Error: ' . $e->getMessage());
+            throw new Exception('GA4 API Error: '.$e->getMessage());
         }
     }
 
     private function buildFilter(array $filterConfig): ?FilterExpression
     {
         if (isset($filterConfig['filterType']) && $filterConfig['filterType'] === 'andGroup') {
-            $filterExpression = new FilterExpression();
-            $andGroup = new FilterExpressionList();
+            $filterExpression = new FilterExpression;
+            $andGroup = new FilterExpressionList;
 
             $expressions = array_map(function ($expr) {
-                $stringFilter = new StringFilter();
+                $stringFilter = new StringFilter;
                 $stringFilter->setValue($expr['stringFilter']['value']);
                 $stringFilter->setMatchType($expr['stringFilter']['matchType']);
                 $stringFilter->setCaseSensitive(
                     $expr['stringFilter']['caseSensitive'] ?? false
                 );
 
-                $filter = new Filter();
+                $filter = new Filter;
                 $filter->setFieldName($expr['fieldName']);
                 $filter->setStringFilter($stringFilter);
 
-                $expression = new FilterExpression();
+                $expression = new FilterExpression;
                 $expression->setFilter($filter);
+
                 return $expression;
             }, $filterConfig['expressions']);
 
@@ -125,11 +144,11 @@ class Reporter
             return $filterExpression;
         }
 
-        if (!isset($filterConfig['fieldName']) || !isset($filterConfig['stringFilter'])) {
+        if (! isset($filterConfig['fieldName']) || ! isset($filterConfig['stringFilter'])) {
             return null;
         }
 
-        $stringFilter = new StringFilter();
+        $stringFilter = new StringFilter;
         if (isset($filterConfig['stringFilter']['value'])) {
             $stringFilter->setValue($filterConfig['stringFilter']['value']);
         }
@@ -141,11 +160,11 @@ class Reporter
             $filterConfig['stringFilter']['caseSensitive'] ?? false
         );
 
-        $filter = new Filter();
+        $filter = new Filter;
         $filter->setFieldName($filterConfig['fieldName']);
         $filter->setStringFilter($stringFilter);
 
-        $filterExpression = new FilterExpression();
+        $filterExpression = new FilterExpression;
         $filterExpression->setFilter($filter);
 
         return $filterExpression;
@@ -156,7 +175,7 @@ class Reporter
         $result = [];
         $rows = $response->getRows();
 
-        if (!$rows) {
+        if (! $rows) {
             return $result;
         }
 
