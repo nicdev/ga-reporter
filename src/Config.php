@@ -14,7 +14,7 @@ namespace Nicdev\GoogleAnalytics;
  */
 class Config
 {
-    private string $_credentialsPath;
+    private ?string $_credentialsPath;
     private ?string $_accessToken = null;
     private array $_scopes;
     private ?string $_applicationName = null;
@@ -46,6 +46,10 @@ class Config
         if (isset($config['credentials'])) {
             $this->_clientId = $config['credentials']['client_id'] ?? null;
             $this->_clientSecret = $config['credentials']['client_secret'] ?? null;
+        }
+
+        if (!$this->_credentialsPath && !$this->_clientId && !$this->_clientSecret) {
+            throw new \InvalidArgumentException('Either credentials_path or credentials must be provided');
         }
 
         $this->_accessToken = $config['access_token'] ?? null;
