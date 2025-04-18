@@ -191,7 +191,32 @@ class Reporter
             // Get metric values
             $metricValues = $row->getMetricValues();
             foreach ($response->getMetricHeaders() as $i => $header) {
-                $rowData[$header->getName()] = $metricValues[$i]->getValue();
+                $metricName = $header->getName();
+                $value = $metricValues[$i]->getValue();
+
+                // Handle different metric types
+                switch ($metricName) {
+                    case 'bounceRate':
+                    case 'engagementRate':
+                        // These are already percentages from GA4
+                        $rowData[$metricName] = (float) $value;
+                        break;
+                    case 'active28DayUsers':
+                    case 'active7DayUsers':
+                    case 'active1DayUsers':
+                    case 'totalUsers':
+                    case 'screenPageViews':
+                        // These are integers
+                        $rowData[$metricName] = (int) $value;
+                        break;
+                    case 'averageSessionDuration':
+                        // This is in seconds
+                        $rowData[$metricName] = (float) $value;
+                        break;
+                    default:
+                        // For any other metrics, keep as is
+                        $rowData[$metricName] = $value;
+                }
             }
 
             $result[] = $rowData;
