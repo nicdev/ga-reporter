@@ -124,6 +124,20 @@ class Reporter
 
             return $report;
         } catch (Exception $e) {
+            // Check if it's an authentication error
+            if ($e->getCode() === 401) {
+                // Try to refresh the token
+                $newToken = $this->client->refreshAccessToken();
+                if ($newToken) {
+                    // Retry the request with the new token
+                    return $analyticsData->properties->runReport(
+                        $this->formatPropertyId($propertyId),
+                        $request
+                    );
+                }
+                // If token refresh failed, throw a more specific exception
+                throw new Exception('Authentication failed. Please reconnect your Google account.');
+            }
             throw new Exception('GA4 API Error: '.$e->getMessage());
         }
     }
