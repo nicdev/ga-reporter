@@ -117,13 +117,31 @@ class Reporter
         }
 
         try {
+            error_log("Starting GA4 API request for property: " . $propertyId);
+            
             $report = $analyticsData->properties->runReport(
                 $this->formatPropertyId($propertyId),
                 $request
             );
 
+            error_log("GA4 API request completed successfully");
+            
+            // Log the raw response with more details
+            ray([
+                'request' => $request,
+                'response' => $report,
+                'propertyId' => $propertyId,
+                'metrics' => $metrics,
+                'dimensions' => $dimensions
+            ])->label('GA4 API Debug');
+
+            // Also log the response as JSON to see the raw structure
+            ray(json_encode($report, JSON_PRETTY_PRINT))->label('GA4 API Response JSON');
+
             return $report;
         } catch (Exception $e) {
+            error_log("GA4 API Error: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
             // Check if it's an authentication error
             if ($e->getCode() === 401) {
                 // Try to refresh the token
