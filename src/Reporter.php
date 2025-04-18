@@ -65,7 +65,14 @@ class Reporter
 
     public function getGA4Data(
         string $propertyId,
-        ?array $metrics = ['activeUsers'],
+        ?array $metrics = [
+            'totalUsers',
+            'active28DayUsers',
+            'averageSessionDuration',
+            'screenPageViews',
+            'sessionsPerUser',
+            'engagementRate'
+        ],
         ?array $dimensions = ['date'],
         ?array $filterConfig = null,
         ?DateTime $startDate = null,
@@ -73,16 +80,23 @@ class Reporter
     ) {
         $analyticsData = $this->client->getAnalyticsDataService();
 
-        $startDate = $startDate ?: new DateTime('-30 days');
+        // Use 28 days as default to match GA4
+        $startDate = $startDate ?: new DateTime('-28 days');
         $endDate = $endDate ?: new DateTime('today');
 
         $request = new RunReportRequest;
 
+        // Set up date ranges for current period and previous period
         $request->setDateRanges([
             [
                 'startDate' => $startDate->format('Y-m-d'),
                 'endDate' => $endDate->format('Y-m-d'),
             ],
+            // Add previous period for comparison
+            [
+                'startDate' => (clone $startDate)->modify('-28 days')->format('Y-m-d'),
+                'endDate' => (clone $endDate)->modify('-28 days')->format('Y-m-d'),
+            ]
         ]);
 
         $request->setMetrics(array_map(function ($metric) {
