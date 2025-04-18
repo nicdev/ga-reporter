@@ -73,7 +73,7 @@ class Reporter
             'sessionsPerUser',
             'engagementRate'
         ],
-        ?array $dimensions = ['date'],
+        ?array $dimensions = ['date', 'pagePath', 'pageTitle'],
         ?array $filterConfig = null,
         ?DateTime $startDate = null,
         ?DateTime $endDate = null
