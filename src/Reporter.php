@@ -65,14 +65,7 @@ class Reporter
 
     public function getGA4Data(
         string $propertyId,
-        ?array $metrics = [
-            'totalUsers',
-            'active28DayUsers',
-            'averageSessionDuration',
-            'screenPageViews',
-            'sessionsPerUser',
-            'engagementRate'
-        ],
+        ?array $metrics = ['activeUsers'],
         ?array $dimensions = ['date'],
         ?array $filterConfig = null,
         ?DateTime $startDate = null,
@@ -80,23 +73,16 @@ class Reporter
     ) {
         $analyticsData = $this->client->getAnalyticsDataService();
 
-        // Use 28 days as default to match GA4
-        $startDate = $startDate ?: new DateTime('-28 days');
+        $startDate = $startDate ?: new DateTime('-30 days');
         $endDate = $endDate ?: new DateTime('today');
 
         $request = new RunReportRequest;
 
-        // Set up date ranges for current period and previous period
         $request->setDateRanges([
             [
                 'startDate' => $startDate->format('Y-m-d'),
                 'endDate' => $endDate->format('Y-m-d'),
             ],
-            // Add previous period for comparison
-            [
-                'startDate' => (clone $startDate)->modify('-28 days')->format('Y-m-d'),
-                'endDate' => (clone $endDate)->modify('-28 days')->format('Y-m-d'),
-            ]
         ]);
 
         $request->setMetrics(array_map(function ($metric) {
@@ -117,45 +103,13 @@ class Reporter
         }
 
         try {
-            error_log("Starting GA4 API request for property: " . $propertyId);
-            
             $report = $analyticsData->properties->runReport(
                 $this->formatPropertyId($propertyId),
                 $request
             );
 
-            error_log("GA4 API request completed successfully");
-            
-            // Log the raw response with more details
-            ray([
-                'request' => $request,
-                'response' => $report,
-                'propertyId' => $propertyId,
-                'metrics' => $metrics,
-                'dimensions' => $dimensions
-            ])->label('GA4 API Debug');
-
-            // Also log the response as JSON to see the raw structure
-            ray(json_encode($report, JSON_PRETTY_PRINT))->label('GA4 API Response JSON');
-
             return $report;
         } catch (Exception $e) {
-            error_log("GA4 API Error: " . $e->getMessage());
-            error_log("Stack trace: " . $e->getTraceAsString());
-            // Check if it's an authentication error
-            if ($e->getCode() === 401) {
-                // Try to refresh the token
-                $newToken = $this->client->refreshAccessToken();
-                if ($newToken) {
-                    // Retry the request with the new token
-                    return $analyticsData->properties->runReport(
-                        $this->formatPropertyId($propertyId),
-                        $request
-                    );
-                }
-                // If token refresh failed, throw a more specific exception
-                throw new Exception('Authentication failed. Please reconnect your Google account.');
-            }
             throw new Exception('GA4 API Error: '.$e->getMessage());
         }
     }
@@ -237,32 +191,7 @@ class Reporter
             // Get metric values
             $metricValues = $row->getMetricValues();
             foreach ($response->getMetricHeaders() as $i => $header) {
-                $metricName = $header->getName();
-                $value = $metricValues[$i]->getValue();
-
-                // Handle different metric types
-                switch ($metricName) {
-                    case 'bounceRate':
-                    case 'engagementRate':
-                        // These are already percentages from GA4
-                        $rowData[$metricName] = (float) $value;
-                        break;
-                    case 'active28DayUsers':
-                    case 'active7DayUsers':
-                    case 'active1DayUsers':
-                    case 'totalUsers':
-                    case 'screenPageViews':
-                        // These are integers
-                        $rowData[$metricName] = (int) $value;
-                        break;
-                    case 'averageSessionDuration':
-                        // This is in seconds
-                        $rowData[$metricName] = (float) $value;
-                        break;
-                    default:
-                        // For any other metrics, keep as is
-                        $rowData[$metricName] = $value;
-                }
+                $rowData[$header->getName()] = $metricValues[$i]->getValue();
             }
 
             $result[] = $rowData;
