@@ -38,7 +38,7 @@ $activeUsers = $reporter->getRealTimeUsers('VIEW_ID');
 ## Features
 
 - Universal Analytics (UA) and GA4 support
-- Real-time Reporting
+- Real-time reporting
 - Audience metrics
 - Event tracking
 - Custom dimensions and metrics
