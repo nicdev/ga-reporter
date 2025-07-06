@@ -16,6 +16,7 @@ class Config
 {
     private ?string $_credentialsPath;
     private ?string $_accessToken = null;
+    private ?string $_refreshToken = null;
     private array $_scopes;
     private ?string $_applicationName = null;
     private ?string $_clientId = null;
@@ -30,6 +31,7 @@ class Config
      *                      - credentials: Array containing client_id and client_secret
      *                      Optional keys:
      *                      - access_token: OAuth access token
+     *                      - refresh_token: OAuth refresh token
      *                      - application_name: Name of the application
      *                      - scopes: Array of Google Analytics API scopes
      * 
@@ -42,7 +44,7 @@ class Config
         }
 
         $this->_credentialsPath = $config['credentials_path'] ?? null;
-        
+
         if (isset($config['credentials'])) {
             $this->_clientId = $config['credentials']['client_id'] ?? null;
             $this->_clientSecret = $config['credentials']['client_secret'] ?? null;
@@ -53,6 +55,7 @@ class Config
         }
 
         $this->_accessToken = $config['access_token'] ?? null;
+        $this->_refreshToken = $config['refresh_token'] ?? null;
         $this->_applicationName = $config['application_name'] ?? null;
         $this->_scopes = $config['scopes'] ?? [
             'https://www.googleapis.com/auth/analytics',
@@ -78,6 +81,16 @@ class Config
     public function getAccessToken(): ?string
     {
         return $this->_accessToken;
+    }
+
+    /**
+     * Get the OAuth refresh token
+     *
+     * @return string|null The OAuth refresh token
+     */
+    public function getRefreshToken(): ?string
+    {
+        return $this->_refreshToken;
     }
 
     /**
