@@ -5,7 +5,7 @@ A modern PHP client for the Google Analytics API
 ## Installation
 
 ```bash
-composer require your-vendor/google-analytics-client
+composer require nicdev/ga-reporter
 ```
 
 ## Setup
