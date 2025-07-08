@@ -47,4 +47,4 @@ $activeUsers = $reporter->getRealTimeUsers('VIEW_ID');
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.force deploy
+Contributions are welcome! Please feel free to submit a Pull Request.
