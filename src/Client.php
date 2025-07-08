@@ -95,7 +95,7 @@ class Client
         return null;
     }
 
-    public function getCurrentAccessToken(): ?string
+    public function getCurrentAccessToken(): ?array
     {
         return $this->client->getAccessToken();
     }
