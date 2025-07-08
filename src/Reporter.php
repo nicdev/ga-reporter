@@ -37,7 +37,7 @@ class Reporter
         }
 
         // Otherwise, prepend 'properties/'
-        return 'properties/'.$propertyId;
+        return 'properties/' . $propertyId;
     }
 
     public function validatePropertyId(string $propertyId): bool
@@ -73,7 +73,6 @@ class Reporter
         ?DateTime $startDate = null,
         ?DateTime $endDate = null
     ) {
-        ray('getGA4Data');
 
         // Check if we need to chunk metrics due to GA4 API limit of 10 metrics per request
         if (count($metrics) > 10) {
@@ -109,12 +108,8 @@ class Reporter
         $metricChunks = array_chunk($metrics, 10);
         $responses = [];
 
-        ray('Metrics will be chunked into '.count($metricChunks).' requests');
-        ray('Metric chunks:', $metricChunks);
-
         // Make API calls for each chunk
         foreach ($metricChunks as $chunkIndex => $metricChunk) {
-            ray('Making request for chunk '.($chunkIndex + 1).' with metrics:', $metricChunk);
 
             $response = $this->makeGA4Request(
                 $propertyId,
@@ -126,9 +121,6 @@ class Reporter
             );
             $responses[] = $response;
         }
-
-        // Merge all responses
-        ray('Merging '.count($responses).' responses');
 
         return $this->mergeGA4Responses($responses);
     }
@@ -155,21 +147,14 @@ class Reporter
             ],
         ]);
 
-        ray($metrics);
-
         $request->setMetrics(array_map(function ($metric) {
             return ['name' => $metric];
         }, $metrics));
-
-        ray($dimensions);
 
         $request->setDimensions(array_map(function ($dimension) {
             return ['name' => $dimension];
         }, $dimensions));
 
-        ray($filterConfig);
-
-        // Add filter if provided
         if ($filterConfig) {
             $filter = $this->buildFilter($filterConfig);
 
@@ -178,19 +163,14 @@ class Reporter
             }
         }
 
-        ray($request);
-
         try {
             $report = $analyticsData->properties->runReport(
                 $this->formatPropertyId($propertyId),
                 $request
             );
-
-            ray($report);
-
             return $report;
         } catch (Exception $e) {
-            throw new Exception('GA4 API Error: '.$e->getMessage());
+            throw new Exception('GA4 API Error: ' . $e->getMessage());
         }
     }
 
