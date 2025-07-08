@@ -2,17 +2,21 @@
 
 namespace Nicdev\GoogleAnalytics;
 
+use Google\Auth\Credentials\UserRefreshCredentials;
 use Google\Client as GoogleClient;
 use Google\Service\Analytics;
 use Google\Service\AnalyticsData;
-use Google\Auth\Credentials\UserRefreshCredentials;
 
 class Client
 {
     private GoogleClient $client;
+
     private ?Analytics $analyticsService = null;
+
     private ?AnalyticsData $analyticsDataService = null;
+
     private Config $config;
+
     private ?UserRefreshCredentials $credentials = null;
 
     public function __construct(array|Config $config)
@@ -23,7 +27,7 @@ class Client
 
     private function initializeClient(): void
     {
-        $this->client = new GoogleClient();
+        $this->client = new GoogleClient;
 
         if ($this->config->getApplicationName()) {
             $this->client->setApplicationName($this->config->getApplicationName());
@@ -65,19 +69,21 @@ class Client
 
     public function getAnalyticsService(): Analytics
     {
-        if (!$this->analyticsService) {
+        if (! $this->analyticsService) {
             $this->ensureFreshToken();
             $this->analyticsService = new Analytics($this->client);
         }
+
         return $this->analyticsService;
     }
 
     public function getAnalyticsDataService(): AnalyticsData
     {
-        if (!$this->analyticsDataService) {
+        if (! $this->analyticsDataService) {
             $this->ensureFreshToken();
             $this->analyticsDataService = new AnalyticsData($this->client);
         }
+
         return $this->analyticsDataService;
     }
 
@@ -90,8 +96,10 @@ class Client
     {
         if ($this->client->isAccessTokenExpired()) {
             $this->client->fetchAccessTokenWithRefreshToken();
+
             return $this->client->getAccessToken();
         }
+
         return null;
     }
 

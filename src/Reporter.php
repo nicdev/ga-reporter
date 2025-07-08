@@ -12,10 +12,12 @@ use Google\Service\AnalyticsData\StringFilter;
 
 /**
  * Reporter class handles Google Analytics 4 data retrieval and reporting operations
+ *
  * @category Analytics
- * @package Nicdev\GoogleAnalytics
+ *
  * @author Nicdev
  * @license MIT
+ *
  * @link https://github.com/nicdev/google-analytics
  */
 class Reporter
@@ -35,7 +37,7 @@ class Reporter
         }
 
         // Otherwise, prepend 'properties/'
-        return 'properties/' . $propertyId;
+        return 'properties/'.$propertyId;
     }
 
     public function validatePropertyId(string $propertyId): bool
@@ -107,12 +109,12 @@ class Reporter
         $metricChunks = array_chunk($metrics, 10);
         $responses = [];
 
-        ray('Metrics will be chunked into ' . count($metricChunks) . ' requests');
+        ray('Metrics will be chunked into '.count($metricChunks).' requests');
         ray('Metric chunks:', $metricChunks);
 
         // Make API calls for each chunk
         foreach ($metricChunks as $chunkIndex => $metricChunk) {
-            ray('Making request for chunk ' . ($chunkIndex + 1) . ' with metrics:', $metricChunk);
+            ray('Making request for chunk '.($chunkIndex + 1).' with metrics:', $metricChunk);
 
             $response = $this->makeGA4Request(
                 $propertyId,
@@ -126,7 +128,8 @@ class Reporter
         }
 
         // Merge all responses
-        ray('Merging ' . count($responses) . ' responses');
+        ray('Merging '.count($responses).' responses');
+
         return $this->mergeGA4Responses($responses);
     }
 
@@ -187,7 +190,7 @@ class Reporter
 
             return $report;
         } catch (Exception $e) {
-            throw new Exception('GA4 API Error: ' . $e->getMessage());
+            throw new Exception('GA4 API Error: '.$e->getMessage());
         }
     }
 
@@ -214,7 +217,7 @@ class Reporter
 
         // Get the base rows structure from the first response
         $baseRows = $baseResponse->getRows();
-        if (!$baseRows) {
+        if (! $baseRows) {
             return $baseResponse;
         }
 

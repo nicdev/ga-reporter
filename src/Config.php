@@ -2,8 +2,6 @@
 
 /**
  * Configuration handler for Google Analytics API authentication
- *
- * @package Nicdev\GoogleAnalytics
  */
 
 namespace Nicdev\GoogleAnalytics;
@@ -15,31 +13,37 @@ namespace Nicdev\GoogleAnalytics;
 class Config
 {
     private ?string $_credentialsPath;
+
     private ?string $_accessToken = null;
+
     private ?string $_refreshToken = null;
+
     private array $_scopes;
+
     private ?string $_applicationName = null;
+
     private ?string $_clientId = null;
+
     private ?string $_clientSecret = null;
 
     /**
      * Initialize configuration for Google Analytics authentication
      *
-     * @param array $config Configuration array containing either credentials file path or OAuth credentials
-     *                      Required keys:
-     *                      - credentials_path: Path to credentials JSON file, OR
-     *                      - credentials: Array containing client_id and client_secret
-     *                      Optional keys:
-     *                      - access_token: OAuth access token
-     *                      - refresh_token: OAuth refresh token
-     *                      - application_name: Name of the application
-     *                      - scopes: Array of Google Analytics API scopes
-     * 
+     * @param  array  $config  Configuration array containing either credentials file path or OAuth credentials
+     *                         Required keys:
+     *                         - credentials_path: Path to credentials JSON file, OR
+     *                         - credentials: Array containing client_id and client_secret
+     *                         Optional keys:
+     *                         - access_token: OAuth access token
+     *                         - refresh_token: OAuth refresh token
+     *                         - application_name: Name of the application
+     *                         - scopes: Array of Google Analytics API scopes
+     *
      * @throws \InvalidArgumentException If neither credentials_path nor credentials are provided
      */
     public function __construct(array $config)
     {
-        if (!isset($config['credentials_path']) && !isset($config['credentials'])) {
+        if (! isset($config['credentials_path']) && ! isset($config['credentials'])) {
             throw new \InvalidArgumentException('Either credentials_path or credentials must be provided');
         }
 
@@ -50,7 +54,7 @@ class Config
             $this->_clientSecret = $config['credentials']['client_secret'] ?? null;
         }
 
-        if (!$this->_credentialsPath && !$this->_clientId && !$this->_clientSecret) {
+        if (! $this->_credentialsPath && ! $this->_clientId && ! $this->_clientSecret) {
             throw new \InvalidArgumentException('Either credentials_path or credentials must be provided');
         }
 
@@ -59,7 +63,7 @@ class Config
         $this->_applicationName = $config['application_name'] ?? null;
         $this->_scopes = $config['scopes'] ?? [
             'https://www.googleapis.com/auth/analytics',
-            'https://www.googleapis.com/auth/analytics.readonly'
+            'https://www.googleapis.com/auth/analytics.readonly',
         ];
     }
 
